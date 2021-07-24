@@ -1,0 +1,102 @@
+<head>
+	<script>
+		var ws=null;
+		function openws(ip,port)
+		{
+			ws=new WebSocket("ws://"+ip+":"+port,['binary']);
+			ws.binaryType="arraybuffer";
+			ws.onopen = onwsopen;
+			ws.onclose = onwsclose;
+			ws.onmessage = onwsmessage;
+		}
+		
+		function onwsopen()
+		{
+			console.log("WS Opened. ReadyState="+ws.readyState);
+			document.getElementById("mainPanel").style.visibility="visible";
+			document.getElementById("connectionStatus").style.color="darkgreen";
+			document.getElementById("connectionStatus").innerHTML="CONNECTED";
+		}
+		
+		function onwsclose()
+		{
+			console.log("WS Closed. ReadyState="+ws.readyState);
+			document.getElementById("mainPanel").style.visibility="hidden";
+			document.getElementById("connectionStatus").style.color="black";
+			document.getElementById("connectionStatus").innerHTML="DISCONNECTED";
+		}
+		
+		function onwsmessage(ev)
+		{	
+			console.log(ev.data);
+			var bytearray=new Uint8Array(ev.data);			
+			var str="";
+			var dataTypeDescription="";
+			var color="black";
+			if(bytearray.length>0)
+			{
+				for(var i=0;i<bytearray.length;i++)
+				{
+					str+=String.fromCharCode(bytearray[i]);
+				}
+				console.log("RECEIVED WS Binary Message="+str);
+				dataTypeDescription="binary";
+				color="blue";
+			}
+			else
+			{
+				str=ev.data;
+				console.log("RECEIVED WS Text Message="+str);
+				dataTypeDescription="text";
+				color="black";
+			}
+			document.getElementById("output").innerHTML+="<div style='color:"+color+"'><="+str+"("+dataTypeDescription+")</div>";
+		}
+		
+		function sendonws()
+		{
+			var str=document.getElementById("text2send").value;
+			var dataTypeDescription="";			
+			var color="black";
+			if(document.getElementById("binaryMode").checked==true)
+			{
+				var bytearray=new Uint8Array(str.length)
+				for(var i=0;i<str.length;i++)
+				{
+					bytearray[i]=str.charCodeAt(i);
+				}				
+				ws.send(bytearray);
+				color="#000088";
+				dataTypeDescription="binary";
+			}
+			else
+			{
+				ws.send(str);
+				color="#888888";
+				dataTypeDescription="text";
+			}
+			document.getElementById("output").innerHTML+="<div style='color:"+color+"'>=>"+str+"("+dataTypeDescription+")</div>";
+		}
+
+		function clearOutput()
+		{
+			document.getElementById("output").innerHTML="";
+		}
+	</script>
+</head>
+<body>
+	IP <input type="text" id='txtIP' value="127.0.0.1"></input>PORT <input type="text" id='txtPort' value="2002"></input>
+	<button onclick='openws(document.getElementById("txtIP").value,document.getElementById("txtPort").value)'>OPEN</button>
+	<label id='connectionStatus'>NOT CONNECTED</label>
+	<br/>
+	<input type="radio" name="communicationType" id="textMode" value="TextMode" checked="checked">Text Mode</input>
+	<input type="radio" name="communicationType" id="binaryMode" value="BinaryMode">Binary Mode</input>
+	<hr/>	
+	<div id='mainPanel' style='background:#EEEEEE;visibility:hidden'>				
+		<input type="text" id="text2send"/>	
+		<button onclick="sendonws()">SEND</button>
+		<button onclick="clearOutput()">CLEAR</button>
+		<div id="output">
+	</div>
+	</div>
+</body>
