@@ -1,1 +1,5 @@
 0.28
+
+#CUSTOM LOG - PRE GIT HISTORY
+0.27 Added HeartBeatTCP sending functionality
+0.28 Added Serial manager gb_setDebugSerialManager function
